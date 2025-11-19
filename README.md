@@ -1,2 +1,2 @@
 # Minigames
-Just my first project of programing
+Un programa en el que selecionas minijuegos

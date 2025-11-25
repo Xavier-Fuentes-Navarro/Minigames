@@ -1,0 +1,94 @@
+import pygame
+import random
+import sys
+
+# Colores
+AMARILLO = (241, 196, 15)
+NARANJA = (230, 126, 34)
+VERDE_CLARO = (22, 163, 133)
+VERDE_OSCURO = (14, 102, 85)
+AZUL_CLARO = (52, 152, 219)
+AZUL_OSCURO = (41, 128, 185)
+GRIS = (200, 200, 200)
+NEGRO = (0, 0, 0)
+
+# Sonido
+
+pygame.mixer.init()
+moneda = pygame.mixer.Sound('monedaMario.wav')
+
+#  Configuración inicial
+ANCHO, ALTO = 960,960
+niveles = [(8, 8), (10, 10), (12, 12)]  # Filas y columnas por nivel
+colores_niveles = [
+    (AMARILLO, NARANJA),       # Nivel 1
+    (VERDE_CLARO, VERDE_OSCURO), # Nivel 2
+    (AZUL_CLARO, AZUL_OSCURO)    # Nivel 3
+]
+nivel_actual = 0
+
+#######Inicia el programa######
+pygame.init()
+screen = pygame.display.set_mode((ANCHO, ALTO))
+pygame.display.set_caption("ENCUENTRA EL CUADRADO DISTINTO")
+font = pygame.font.SysFont(None, 60)
+
+def nuevo_nivel(nivel):
+    filas, columnas = niveles[nivel]
+    tam_cuadrado = ANCHO // columnas
+    fila_diferente = random.randint(0, filas - 1)
+    columna_diferente = random.randint(0, columnas - 1)
+    return filas, columnas, tam_cuadrado, fila_diferente, columna_diferente
+
+filas, columnas, tam_cuadrado, fila_diferente, columna_diferente = nuevo_nivel(nivel_actual)
+
+game_over = False
+ganaste = False
+
+while not game_over:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_over = True
+        elif event.type == pygame.MOUSEBUTTONDOWN and not ganaste:
+            x, y = event.pos
+            fila_click = y // tam_cuadrado
+            columna_click = x // tam_cuadrado
+
+            if fila_click == fila_diferente and columna_click == columna_diferente:
+                
+                moneda.play()
+                nivel_actual += 1
+                if nivel_actual < len(niveles):
+                    filas, columnas, tam_cuadrado, fila_diferente, columna_diferente = nuevo_nivel(nivel_actual)
+                else:
+                    ganaste = True
+
+    screen.fill(GRIS)
+
+    if not ganaste:
+        # Colores del nivel actual
+        color_diferente, color_base = colores_niveles[nivel_actual]
+
+        # Dibujar la cuadrícula con bordes
+        for i in range(filas):
+            for j in range(columnas):
+                color = color_diferente if (i == fila_diferente and j == columna_diferente) else color_base
+                x = j * tam_cuadrado
+                y = i * tam_cuadrado
+                rect = pygame.Rect(x, y, tam_cuadrado, tam_cuadrado)
+                pygame.draw.rect(screen, color, rect)        # Relleno
+                pygame.draw.rect(screen, NEGRO, rect, 2)     # Borde fino
+
+        # Mostrar nivel actual
+        texto_nivel = font.render(f"NIVEL {nivel_actual+1}", True, NEGRO)
+        screen.blit(texto_nivel, (10, 10))
+    else:
+        # Mensaje final
+        texto = font.render("¡HAS GANADO!", True, NEGRO)
+        rect_texto = texto.get_rect(center=(ANCHO // 2, ALTO // 2))
+        screen.blit(texto, rect_texto)
+
+    pygame.display.flip()
+
+pygame.quit()
+sys.exit()
